@@ -1,0 +1,116 @@
+global gpstext [/file get gps.txt contents];
+
+:local serverurl "demo5.traccar.org";
+:local serverport "5055";
+:local trackerid "132456";
+
+:local myspeed  [:find $gpstext "speed" -1];
+:local myalt  [:find $gpstext "altitude" -1];
+:local mytime [:find $gpstext "date-and-time" -1];
+
+:local longstart [:find $gpstext "longitude" -1];
+:local longend [:find $gpstext "\n" $longstart];
+:local latstart [:find $gpstext "latitude" -1];
+:local latend [:find $gpstext "\n" $latstart];
+:local validstart [:find $gpstext "valid" -1];
+:local validend [:find $gpstext "\n" $validstart];
+:local speedstart [:find $gpstext "speed"];
+:local speedend [:find $gpstext "." $speedstart];
+:local speed [;pick $gpstext ($speedstart +7) ($speedend +3)];
+:local altitudestart [:find $gpstext "altitude"];
+:local altitudeend [:find $gpstext "." $altitudestart];
+:local altitude [;pick $gpstext ($altitudestart +10) ($altitudeend +3)];
+
+:local valid false;
+:local zeros "";
+
+
+:if ([:find $gpstext "yes" $validstart] > 0) do={:set valid true;};
+
+:local longitude [:pick $gpstext ($longstart + 11) $longend];
+:local degreestart [:find $longitude " " -1];
+:local minutestart [:find $longitude " " $degreestart];
+:local secondstart [:find $longitude "'" $minutestart];
+
+:local secondend;
+:local secfract;
+
+:if ([:len [:find $longitude "." 0]] < 1) do={
+    :set secondend [:find $longitude "'" $secondstart];
+    :set secfract "0";
+} else={
+    :set secondend [:find $longitude "." $secondstart];
+    :set secfract [:pick $longitude ($secondend + 1) ($secondend + 2)];
+};
+
+:local longdegree;
+:local longdegreelink;
+
+:if ([:pick $longitude 0 1] = "W") do={
+    :set longdegree "-";
+    :set longdegreelink "W";
+} else={
+    :set longdegree "+";
+    :set longdegreelink "E";
+};
+
+:set longdegree ($longdegree . [:pick $longitude 2 $minutestart]);
+:set longdegreelink ($longdegreelink . [:pick $longitude 2 $minutestart]);
+:local longmin [:pick $longitude ($minutestart + 1) $secondstart];
+:local longsec [:pick $longitude ($secondstart + 2) $secondend];
+:local longfract ((([:tonum $longmin] * 6000) + ([:tonum $longsec] * 100) + ([:tonum $secfract] * 10) ) / 36);
+
+:while (([:len $zeros] + [:len $longfract]) < 4) do={
+    :set zeros ($zeros . "0");
+};
+
+:local newlong ($longdegree . "." . $zeros . $longfract);
+:local newlonglink ($longdegreelink . "." . $zeros . $longfract);
+
+:local latitude [:pick $gpstext (latstart + 10) $latend];
+:set degreestart [:find $latitude " " -1];
+:set minutestart [:find $latitude " " $degreestart];
+:set secondstart [:find $latitude "'" $minutestart];
+
+:if ([:len [:find $latitude "." 0]] < 1) do={
+    :set secondend [:find $latitude "'" $secondstart];
+    :set secfract "0";
+} else={
+    :set secondend [:find $latitude "." $secondstart];
+    :set secfract [:pick $latitude ($secondend + 1) ($secondend +2)];
+};
+
+:local latdegree;
+:local latdegreelink;
+
+:if ([:pick $latitude 0 1] = "N") do={
+    :set latdegree "+";
+    :set latdegreelink "N";
+} else={
+    :set latdegree "-";
+    :set latdegreelink "S";
+};
+
+:set latdegree ($latdegree . [:pick $latitude 2 $minutestart]);
+:set latdegreelink ($latdegreelink . [:pick $latitude 2 $minutestart]);
+:local latmin [:pick $latitude ($minutestart + 1) $secondstart];
+:local latsec [:pick $latitude ($secondstart + 2) $secondend];
+:local latfract ((([:tonum $latmin] * 6000) + ([:tonum $latsec] * 100) +([:tonum $secfract] * 10)) / 36);
+
+:set zeros "";
+
+:while (([:len $zeros] + [:len $latfract]) < 4) do={
+    :set zeros ($zeros . "0");
+};
+
+:local newlat ($latdegree . "." . $zeros . $latfract);
+:local newlatlink ($latdegreelink . "." . $zeros . $latfract);
+
+:local coordinates ($newlong . "," . $newlat);
+
+# :log info message="GPS Script: Posting update";
+
+:do {/tool fetch keep-result=no url=("http://" . $serverurl . ":" . $serverport ."/\?id=" . $trackerid . "&lat=" . $newlat . "&lon=" . $newlong . "&timestamp=0&hdop=0&altitude=$altitude&speed=$speed")
+} on-error={:log error message="Fetch failed..."}
+
+# :log info message="GPS Script: Posting update DONE";

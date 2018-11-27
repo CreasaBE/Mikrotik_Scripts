@@ -1,10 +1,10 @@
 :system gps monitor once file="gps.txt";
+:interface lte info lte1 file="lte1info.txt";
 
 global gpstext [/file get gps.txt contents];
 
 :local serverurl "demo5.traccar.org";
 :local serverport "5055";
-:local trackerid "132456";
 
 :local myspeed  [:find $gpstext "speed" -1];
 :local myalt  [:find $gpstext "altitude" -1];
@@ -23,9 +23,22 @@ global gpstext [/file get gps.txt contents];
 :local altitudeend [:find $gpstext "." $altitudestart];
 :local altitude [;pick $gpstext ($altitudestart +10) ($altitudeend +3)];
 
+:global lte1info [:file get lte1info.txt contents];
+:local imeistart [:find $lte1info "imei"];
+:local imeiend [:find $lte1info "\n" $imeistart];
+:global imei [:pick $lte1info ($imeistart +6) ($imeiend)];
+
+:local techstart [:find $lte1info "access"];
+:local techend [:find $lte1info "\n" $techstart];
+:local techno [:pick $lte1info ($techstart +19) ($techend)];
+
+:global technology;
+:if ($techno ="GSM compact") do={[:set technology "GSM";]}
+:if ($techno ="3G") do={:set technology "UMTS";}
+:if ($techno ="Evolved 3G (LTE)") do={[:set technology "LTE";]}
+
 :local valid false;
 :local zeros "";
-
 
 :if ([:find $gpstext "yes" $validstart] > 0) do={:set valid true;};
 
@@ -112,7 +125,7 @@ global gpstext [/file get gps.txt contents];
 
 # :log info message="GPS Script: Posting update";
 
-:do {/tool fetch keep-result=no url=("http://" . $serverurl . ":" . $serverport ."/\?id=" . $trackerid . "&lat=" . $newlat . "&lon=" . $newlong . "&timestamp=0&hdop=0&altitude=$altitude&speed=$speed")
+:do {/tool fetch keep-result=no url=("http://" . $serverurl . ":" . $serverport ."/\?id=" . $imei . "&lat=" . $newlat . "&lon=" . $newlong . "&timestamp=0&hdop=0&altitude=$altitude&speed=$speed")
 } on-error={:log error message="Fetch failed..."}
 
 # :log info message="GPS Script: Posting update DONE";

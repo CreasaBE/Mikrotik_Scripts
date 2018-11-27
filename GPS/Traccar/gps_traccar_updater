@@ -1,7 +1,7 @@
 :system gps monitor once file="gps.txt";
 :interface lte info lte1 file="lte1info.txt";
 
-global gpstext [/file get gps.txt contents];
+:local gpstext [/file get gps.txt contents];
 
 :local serverurl "demo5.traccar.org";
 :local serverport "5055";
@@ -24,18 +24,18 @@ global gpstext [/file get gps.txt contents];
 :local altitude [;pick $gpstext ($altitudestart +10) ($altitudeend +3)];
 :local satellitesstart [:find $gpstext "satellites"];
 :local satellitesend [:find $gpstext "\n" $satellitesstart];
-:global satellites [;pick $gpstext ($satellitesstart +12) ($satellitesend)];
+:local satellites [;pick $gpstext ($satellitesstart +12) ($satellitesend)];
 
-:global lte1info [:file get lte1info.txt contents];
+:local lte1info [:file get lte1info.txt contents];
 :local imeistart [:find $lte1info "imei"];
 :local imeiend [:find $lte1info "\n" $imeistart];
-:global imei [:pick $lte1info ($imeistart +6) ($imeiend)];
+:local imei [:pick $lte1info ($imeistart +6) ($imeiend)];
 
 :local techstart [:find $lte1info "access"];
 :local techend [:find $lte1info "\n" $techstart];
 :local techno [:pick $lte1info ($techstart +19) ($techend)];
 
-:global technology;
+:local technology;
 :if ($techno ="GSM compact") do={[:set technology "GSM";]}
 :if ($techno ="3G") do={:set technology "UMTS";}
 :if ($techno ="Evolved 3G (LTE)") do={[:set technology "LTE";]}

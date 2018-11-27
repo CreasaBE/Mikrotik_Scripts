@@ -1,2 +1,2 @@
 # Mikrotik_Scripts
-Some usefull mikrotik scripts
+This repo containt a collection of mikrotik scripts that I wrote or modified and use myself

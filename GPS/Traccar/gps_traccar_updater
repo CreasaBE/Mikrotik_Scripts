@@ -22,6 +22,9 @@ global gpstext [/file get gps.txt contents];
 :local altitudestart [:find $gpstext "altitude"];
 :local altitudeend [:find $gpstext "." $altitudestart];
 :local altitude [;pick $gpstext ($altitudestart +10) ($altitudeend +3)];
+:local satellitesstart [:find $gpstext "satellites"];
+:local satellitesend [:find $gpstext "\n" $satellitesstart];
+:global satellites [;pick $gpstext ($satellitesstart +12) ($satellitesend)];
 
 :global lte1info [:file get lte1info.txt contents];
 :local imeistart [:find $lte1info "imei"];
@@ -125,7 +128,7 @@ global gpstext [/file get gps.txt contents];
 
 # :log info message="GPS Script: Posting update";
 
-:do {/tool fetch keep-result=no url=("http://" . $serverurl . ":" . $serverport ."/\?id=" . $imei . "&lat=" . $newlat . "&lon=" . $newlong . "&timestamp=0&hdop=0&altitude=$altitude&speed=$speed")
+:do {/tool fetch keep-result=no url=("http://" . $serverurl . ":" . $serverport ."/\?id=" . $imei . "&lat=" . $newlat . "&lon=" . $newlong . "&timestamp=0&hdop=$satellites&altitude=$altitude&speed=$speed")
 } on-error={:log error message="Fetch failed..."}
 
 # :log info message="GPS Script: Posting update DONE";

@@ -30,9 +30,9 @@
 :local satellitesend [:find $gpstext "\n" $satellitesstart];
 :local satellites [;pick $gpstext ($satellitesstart +12) ($satellitesend)];
 
-:global bearingstart [:find $gpstext "true-bearing"];
-:global bearingend [:find $gpstext "\n" $bearingstart];
-:global bearing [;pick $gpstext ($bearingstart +15) ($bearingend -10)];
+:local bearingstart [:find $gpstext "true-bearing"];
+:local bearingend [:find $gpstext "\n" $bearingstart];
+:local bearing [;pick $gpstext ($bearingstart +15) ($bearingend -10)];
 
 
 

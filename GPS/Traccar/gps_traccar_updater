@@ -171,7 +171,7 @@
 
 :local mystamp [$timestamp];
 
-:do {/tool fetch keep-result=no url=("http://" . $serverurl . ":" . $serverport ."/\?id=$imei&lat=$newlat&lon=$newlong&timestamp=$mystamp&hdop=$satellites&altitude=$altitude&speed=$speed")
+:do {/tool fetch keep-result=no url=("http://" . $serverurl . ":" . $serverport ."/\?id=$imei&lat=$newlat&lon=$newlong&timestamp=$mystamp&altitude=$altitude&speed=$speed&course=$bearing&satelites=$satellites")
 } on-error={:log error message="Fetch failed..."}
 
 # :log info message="GPS Script: Posting update DONE";

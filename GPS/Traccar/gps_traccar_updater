@@ -6,10 +6,14 @@
 :local serverurl "194.50.91.12";
 :local serverport "5055";
 
+
+:local valid false;
+:local zeros "";
+
+# GPS Info
 :local myspeed  [:find $gpstext "speed" -1];
 :local myalt  [:find $gpstext "altitude" -1];
 :local mytime [:find $gpstext "date-and-time" -1];
-
 :local longstart [:find $gpstext "longitude" -1];
 :local longend [:find $gpstext "\n" $longstart];
 :local latstart [:find $gpstext "latitude" -1];
@@ -26,22 +30,26 @@
 :local satellitesend [:find $gpstext "\n" $satellitesstart];
 :local satellites [;pick $gpstext ($satellitesstart +12) ($satellitesend)];
 
+:global bearingstart [:find $gpstext "true-bearing"];
+:global bearingend [:find $gpstext "\n" $bearingstart];
+:global bearing [;pick $gpstext ($bearingstart +15) ($bearingend -10)];
+
+
+
+
+# LTE Info
 :local lte1info [:file get lte1info.txt contents];
 :local imeistart [:find $lte1info "imei"];
 :local imeiend [:find $lte1info "\n" $imeistart];
 :local imei [:pick $lte1info ($imeistart +6) ($imeiend)];
-
 :local techstart [:find $lte1info "access"];
 :local techend [:find $lte1info "\n" $techstart];
 :local techno [:pick $lte1info ($techstart +19) ($techend)];
-
 :local technology;
 :if ($techno ="GSM compact") do={[:set technology "GSM";]}
 :if ($techno ="3G") do={:set technology "UMTS";}
 :if ($techno ="Evolved 3G (LTE)") do={[:set technology "LTE";]}
 
-:local valid false;
-:local zeros "";
 
 :if ([:find $gpstext "yes" $validstart] > 0) do={:set valid true;};
 
@@ -161,9 +169,9 @@
 
 # :log info message="GPS Script: Posting update";
 
-:global mystamp [$timestamp];
+:local mystamp [$timestamp];
 
-:do {/tool fetch keep-result=no url=("http://" . $serverurl . ":" . $serverport ."/\?id=" . $imei . "&lat=" . $newlat . "&lon=" . $newlong . "&timestamp=$mystamp&hdop=$satellites&altitude=$altitude&speed=$speed")
+:do {/tool fetch keep-result=no url=("http://" . $serverurl . ":" . $serverport ."/\?id=$imei&lat=$newlat&lon=$newlong&timestamp=$mystamp&hdop=$satellites&altitude=$altitude&speed=$speed")
 } on-error={:log error message="Fetch failed..."}
 
 # :log info message="GPS Script: Posting update DONE";

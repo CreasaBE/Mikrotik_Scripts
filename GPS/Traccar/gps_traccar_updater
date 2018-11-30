@@ -3,7 +3,7 @@
 
 :local gpstext [/file get gps.txt contents];
 
-:local serverurl "194.50.91.12";
+:local serverurl "demo5.traccar.org";
 :local serverport "5055";
 
 
